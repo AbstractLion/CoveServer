@@ -1,7 +1,33 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <style>
+      .letter {
+        position: relative;
+      }
+  
+      .cursor::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 1px;
+        background-color: black;
+      }
+
+      .selected {
+        background-color: lightblue;
+      }
+    </style>
+  </head>
   <body>
-    <textarea id="content"></textarea>
+    <textarea id="text"></textarea>
+    <div id="content"></div>
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
+      crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="main.js"></script>
   </body>
