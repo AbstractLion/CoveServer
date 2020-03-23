@@ -14,13 +14,9 @@ var io = require('socket.io').listen(server);
 
 io.on('connect', (socket) => {
   console.log('connected');
-  socket.on('change', (data) => {
-    socket.broadcast.emit('change', data);
+  socket.on('textChange', (changes) => {
+    socket.broadcast.emit('textChange', changes);
   });
-
-  socket.on('selections', (data) => {
-    socket.broadcast.emit('selections', data);
-  })
-})
+});
 
 server.listen(8080, () => {console.log("Listening...")}); 

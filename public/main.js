@@ -1,37 +1,46 @@
 const socket = io('http://localhost:8080');
 
-function renderData(data) {
-  $('#content').empty();
-  let lines = data.split('\n');
-  lines.forEach((line) => {
-    const lineEl = $(`<div class="line"></div>`);
-    line.split('').forEach((char) => {
-      lineEl.append($(`<span class="letter">${char}</span>`))
+const content = $('#content');
+const nbspStr = '<span class="letter">&nbsp;</span>';
+
+// [{"range":[{"line":0,"character":0},{"line":0,"character":0}],"rangeOffset":0,"rangeLength":0,"text":"\n"}]
+socket.on('textChange', function(changes) {
+  console.log(changes);
+  changes.forEach(function(change) {
+    const {range, text} = change;
+    const startLine = content.children().eq(range[0].line);
+
+    // multiline deletion
+    if (range[0].line !== range[1].line) {
+      const endLine = content.children().eq(range[1].line);
+      startLine.children().slice(range[0].character).remove();
+      endLine.children().slice(0, range[1].character).remove();
+      // removes all lines inbetween startLine and endLine
+      content.children().slice(range[0].line + 1, range[1].line).remove();
+
+      // appends the contents of endLine to startLine and removes endLine
+      endLine.contents().appendTo(startLine);
+      endLine.remove(); 
+    } else {
+      console.log(startLine.children());
+      startLine.children().slice(range[0].character, range[1].character).remove();
+    }
+
+    const lines = text.split('\n');
+    lines.forEach(function(line, i, arr) {
+      let letterContainer = $('<div class="line"></div>')
+      line.split('').forEach(function(char) {
+        letterContainer.append($(`<span class="letter">${char}</span>`));
+      });
+      arr[i] = letterContainer;
     })
-    lineEl.append($(`<span class="letter">&nbsp;</span>`))
-    $('#content').append(lineEl);
-  })
-}
 
-socket.on('change', function(data) {
-  console.log(data);
-  $('#text').val(data);
-  renderData(data);
-});
-
-socket.on('selections', function(selections) {
-  console.log(selections);
-  $('.selected').removeClass('selected');
-  $('.cursor').removeClass('cursor');
-  selections.forEach((selection) => {
-    const {active, start, end} = selection;
-    const lines = $(`#content .line`);
-    lines.slice(start.line, end.line + 1)
-         .children().slice(start.character, end.character).addClass('selected');
-    lines.eq(active.line).children().eq(active.character).addClass('cursor');
+    const excess = startLine.children().slice(range[0].character).detach();
+    lines[0].contents().appendTo(startLine);
+    for (let i = 0; i < lines.length - 1; ++i) {
+      lines[i].append($(nbspStr));
+      content.children().eq(range[0].line + i).after(lines[i+1]);
+    }
+    excess.appendTo(content.children().eq(range[0].line + lines.length - 1));
   });
-});
-
-$('#text').on('input', (e) => {
-  socket.emit('change', $('#text').val());
 });
